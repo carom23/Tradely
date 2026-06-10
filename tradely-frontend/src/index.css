@@ -1,0 +1,163 @@
+@import url('https://fonts.googleapis.com/css2?family=Elms+Sans:ital,wght@0,100..900;1,100..900&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Elms Sans", sans-serif;
+  --font-mono: "Source Code Pro", monospace;
+
+  /* Definir variables dinámicas de tema de color para Tailwind v4 */
+  --color-black: var(--app-black);
+  --color-white: var(--app-white);
+  
+  --color-zinc-950: var(--app-zinc-950);
+  --color-zinc-900: var(--app-zinc-900);
+  --color-zinc-800: var(--app-zinc-800);
+  --color-zinc-700: var(--app-zinc-700);
+  --color-zinc-600: var(--app-zinc-600);
+  --color-zinc-500: var(--app-zinc-500);
+  --color-zinc-400: var(--app-zinc-400);
+  --color-zinc-300: var(--app-zinc-300);
+  --color-zinc-200: var(--app-zinc-200);
+  --color-zinc-100: var(--app-zinc-100);
+
+  --color-emerald-950: var(--app-emerald-950);
+  --color-emerald-900: var(--app-emerald-900);
+  --color-emerald-500: var(--app-emerald-500);
+  --color-emerald-400: var(--app-emerald-400);
+
+  --color-rose-950: var(--app-rose-950);
+  --color-rose-900: var(--app-rose-900);
+  --color-rose-500: var(--app-rose-500);
+  --color-rose-400: var(--app-rose-400);
+}
+
+/* TEMA OSCURO POR DEFECTO */
+:root {
+  --app-black: #000000;
+  --app-white: #ffffff;
+  
+  --app-zinc-950: #09090b;
+  --app-zinc-900: #18181b;
+  --app-zinc-800: #27272a;
+  --app-zinc-700: #3f3f46;
+  --app-zinc-600: #52525b;
+  --app-zinc-500: #71717a;
+  --app-zinc-400: #a1a1aa;
+  --app-zinc-300: #d4d4d8;
+  --app-zinc-200: #e4e4e7;
+  --app-zinc-100: #f4f4f5;
+
+  --app-emerald-950: #022c22;
+  --app-emerald-900: #064e3b;
+  --app-emerald-500: #10b981;
+  --app-emerald-400: #34d399;
+
+  --app-rose-950: #4c0519;
+  --app-rose-900: #881337;
+  --app-rose-500: #f43f5e;
+  --app-rose-400: #fb7185;
+
+  --theme-bg: #000000;
+  --theme-text: #ffffff;
+  --theme-border-900: #18181b;
+  --theme-border-800: #27272a;
+  --theme-border-500: #71717a;
+  --theme-card-bg: rgba(9, 9, 11, 0.4);
+}
+
+/* TEMA CLARO (ACTIVADO CON LA CLASE .light-theme) */
+.light-theme {
+  --app-black: #ffffff;
+  --app-white: #0f172a; /* Slate 900 */
+  
+  --app-zinc-950: #fafafa;
+  --app-zinc-900: #f4f4f5;
+  --app-zinc-800: #e4e4e7;
+  --app-zinc-700: #d4d4d8;
+  --app-zinc-600: #a1a1aa;
+  --app-zinc-500: #71717a;
+  --app-zinc-400: #52525b;
+  --app-zinc-300: #3f3f46;
+  --app-zinc-200: #27272a;
+  --app-zinc-100: #18181b;
+
+  --app-emerald-950: #ecfdf5; /* Emerald 50 */
+  --app-emerald-900: #d1fae5; /* Emerald 100 */
+  --app-emerald-500: #10b981;
+  --app-emerald-400: #059669;
+
+  --app-rose-950: #fff1f2; /* Rose 50 */
+  --app-rose-900: #ffe4e6; /* Rose 100 */
+  --app-rose-500: #f43f5e;
+  --app-rose-400: #e11d48;
+
+  --theme-bg: #ffffff;
+  --theme-text: #0f172a;
+  --theme-border-900: #f1f1f4;
+  --theme-border-800: #e4e4e7;
+  --theme-border-500: #d4d4d8;
+  --theme-card-bg: #f7f7f9;
+}
+
+body {
+  font-family: "Elms Sans", sans-serif;
+  background-color: var(--theme-bg);
+  color: var(--theme-text);
+  transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+}
+
+input, select, textarea, button {
+  font-family: "Elms Sans", sans-serif;
+}
+
+.font-mono, .font-mono * {
+  font-family: "Source Code Pro", monospace !important;
+}
+
+/* Forzar transiciones de color y contraste en textos secundarios y bordes */
+.text-zinc-400 {
+  color: var(--app-zinc-400) !important;
+  transition: color 0.25s ease;
+}
+
+.text-zinc-500 {
+  color: var(--app-zinc-500) !important;
+  transition: color 0.25s ease;
+}
+
+.border-zinc-900 {
+  border-color: var(--theme-border-900) !important;
+  transition: border-color 0.25s ease;
+}
+
+.border-zinc-800 {
+  border-color: var(--theme-border-800) !important;
+  transition: border-color 0.25s ease;
+}
+
+.border-zinc-500 {
+  border-color: var(--theme-border-500) !important;
+  transition: border-color 0.25s ease;
+}
+
+/* Fondos reactivos de las tarjetas */
+.bg-zinc-950\/20, .bg-zinc-950\/10, .bg-zinc-950\/40, .bg-zinc-950\/30 {
+  background-color: var(--theme-card-bg) !important;
+  transition: background-color 0.25s ease;
+}
+
+/* Scrollbars dinámicos */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--theme-bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--app-zinc-700);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--app-zinc-500);
+}

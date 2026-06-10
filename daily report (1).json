@@ -1,0 +1,236 @@
+{
+  "name": "daily report",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "const yesterday = new Date();\nyesterday.setDate(yesterday.getDate() - 1);\n\nconst pad = (n) => String(n).padStart(2, '0');\nconst fechaYYYYMMDD = `${yesterday.getFullYear()}-${pad(yesterday.getMonth()+1)}-${pad(yesterday.getDate())}`;\n\nreturn [{\n  json: {\n    fechaInicio: fechaYYYYMMDD,   // ej: \"2026-04-14\"\n    fechaFin: fechaYYYYMMDD,      // mismo día (el endpoint añade +1 día internamente)\n    fechaLegible: yesterday.toLocaleDateString('es-ES', {\n      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'\n    })\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -64,
+        0
+      ],
+      "id": "3ffd1217-03fc-4804-b16f-78434a55a07c",
+      "name": "calculo de fechas"
+    },
+    {
+      "parameters": {
+        "url": "https://incidencias-rapitecnic.prishia.es/api/incidencias",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "fecha_inicio",
+              "value": "={{ $json.fechaInicio }}"
+            },
+            {
+              "name": "fecha_fin",
+              "value": "={{ $json.fechaFin }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        144,
+        0
+      ],
+      "id": "a523055d-ad86-401e-b637-557bb4c54472",
+      "name": "HTTP Request",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "zvEtkqkK72JGLL9u",
+          "name": "Bearer Auth rapitecnic_data"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Analiza las siguientes incidencias de atención al cliente del día {{ $('calculo de fechas').first().json.fechaLegible }} y genera un resumen ejecutivo en español con este formato exacto:\n\n## Resumen Ejecutivo\n**Fecha:** {{ $('calculo de fechas').first().json.fechaLegible }}\n**Total de incidencias:** {{ $('consolidar datos').first().json.total }}\n\n### Distribución por Tipo de Incidencia\n[cuenta cuántas hay de cada tipo: recoleccion_datos, envio_datos_erroneos, colgar_llamada, llamada_devuelta]\n\n### Distribución por Tipo de Flujo\n[cuenta cuántas hay de cada tipo: nueva_cita, cambio_cita, verificacion_material, contabilidad, reclamaciones, enrutamiento, evento_mal_clasificado]\n\n### Incidencias Destacadas\n[lista las más relevantes con: ID, conv_id, tipo, flujo y observaciones]\n\n### Análisis y Recomendaciones\n[2-3 párrafos explicando los patrones detectados y qué se debería corregir]\n\nDatos de incidencias:\n{{ JSON.stringify($('consolidar datos').first().json.incidencias) }}",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        592,
+        -128
+      ],
+      "id": "e76f8e5b-9191-4e10-888f-b6190976a38e",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        432,
+        192
+      ],
+      "id": "d26292ae-4f08-46b4-88e0-93135e6807b9",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "VawlKHA0rCWzEehm",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.first().json;\n\n// Usa el nombre EXACTO de tu nodo de fechas\nconst fechaLegible = $('calculo de fechas').first().json.fechaLegible;\n\n// La API devuelve { status, total, incidencias: [...] }\nconst incidencias = response.incidencias || [];\n\nreturn [{\n  json: {\n    incidencias,\n    total: response.total || incidencias.length,\n    fechaLegible\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        352,
+        0
+      ],
+      "id": "0320505e-1c3d-42de-918f-80d36d26847f",
+      "name": "consolidar datos"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -240,
+        0
+      ],
+      "id": "1b2c13da-5156-4953-966d-26bdaae21927",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "jsCode": "const resumenTexto = $input.first().json.output || 'No se pudo generar el resumen.';\n\nconst incidencias = $('consolidar datos').first().json.incidencias;\nconst fechaLegible = $('calculo de fechas').first().json.fechaLegible;\nconst total = $('consolidar datos').first().json.total;\n\nreturn [{\n  json: {\n    resumenTexto,\n    incidencias,\n    fechaLegible,\n    total\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        912,
+        -32
+      ],
+      "id": "8b84084c-9569-4131-b50f-9fb16b73b4ae",
+      "name": "Extraer Resumen"
+    },
+    {
+      "parameters": {
+        "jsCode": "const { incidencias, fechaLegible, total, resumenTexto } = $input.first().json;\n\n// Convertir markdown básico a HTML\nconst resumenHTML = resumenTexto\n  .replace(/## (.*)/g, '<h2 style=\"color:#1a365d\">$1</h2>')\n  .replace(/### (.*)/g, '<h3 style=\"color:#2b6cb0\">$1</h3>')\n  .replace(/\\*\\*(.*?)\\*\\*/g, '<strong>$1</strong>')\n  .replace(/\\n/g, '<br>');\n\n// Colores por tipo de incidencia\nconst colores = {\n  recoleccion_datos:    { bg: '#fefcbf', color: '#744210' },\n  envio_datos_erroneos: { bg: '#fed7d7', color: '#742a2a' },\n  colgar_llamada:       { bg: '#feebc8', color: '#7b341e' },\n  llamada_devuelta:     { bg: '#c6f6d5', color: '#22543d' }\n};\n\nconst filas = incidencias.map(inc => {\n  const c = colores[inc.tipo_incidencia] || { bg: '#e2e8f0', color: '#4a5568' };\n  return `\n    <tr>\n      <td style=\"padding:9px 12px;border-bottom:1px solid #e2e8f0\">${inc.id_incidencia}</td>\n      <td style=\"padding:9px 12px;border-bottom:1px solid #e2e8f0;font-size:11px\">${inc.conv_id}</td>\n      <td style=\"padding:9px 12px;border-bottom:1px solid #e2e8f0\">\n        <span style=\"background:${c.bg};color:${c.color};padding:2px 8px;border-radius:12px;font-size:10px;font-weight:600\">\n          ${(inc.tipo_incidencia || '-').replace(/_/g,' ')}\n        </span>\n      </td>\n      <td style=\"padding:9px 12px;border-bottom:1px solid #e2e8f0\">\n        <span style=\"background:#e9d8fd;color:#44337a;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:600\">\n          ${(inc.tipo_flujo || '-').replace(/_/g,' ')}\n        </span>\n      </td>\n      <td style=\"padding:9px 12px;border-bottom:1px solid #e2e8f0;font-size:11px\">${inc.observaciones || '-'}</td>\n    </tr>`;\n}).join('');\n\nconst html = `\n<div style=\"font-family:'Segoe UI',Arial,sans-serif;max-width:800px;margin:auto;color:#2d3748\">\n  <div style=\"background:linear-gradient(135deg,#1a365d,#2b6cb0);color:white;padding:24px 30px;border-radius:10px 10px 0 0\">\n    <h1 style=\"margin:0;font-size:20px\">📋 Informe Diario de Incidencias</h1>\n    <p style=\"margin:6px 0 0;opacity:.85\">${fechaLegible}</p>\n  </div>\n  <div style=\"background:#f7fafc;padding:24px 30px;border:1px solid #e2e8f0;border-top:none\">\n    <h2 style=\"font-size:15px;color:#1a365d;border-bottom:2px solid #bee3f8;padding-bottom:8px\">\n      Resumen Ejecutivo (IA)\n    </h2>\n    <div style=\"line-height:1.7;margin-top:14px\">${resumenHTML}</div>\n\n    <div style=\"background:#ebf8ff;border-left:4px solid #3182ce;padding:12px 18px;border-radius:6px;margin:24px 0 16px\">\n      <strong>Total de incidencias del día:</strong> ${total}\n    </div>\n\n    <h2 style=\"font-size:15px;color:#1a365d;border-bottom:2px solid #bee3f8;padding-bottom:8px;margin-top:8px\">\n      Detalle de Incidencias\n    </h2>\n    <table style=\"width:100%;border-collapse:collapse;font-size:12px;margin-top:14px\">\n      <thead>\n        <tr style=\"background:#2b6cb0;color:white\">\n          <th style=\"padding:10px 12px;text-align:left\">#</th>\n          <th style=\"padding:10px 12px;text-align:left\">Conv ID</th>\n          <th style=\"padding:10px 12px;text-align:left\">Tipo Incidencia</th>\n          <th style=\"padding:10px 12px;text-align:left\">Tipo Flujo</th>\n          <th style=\"padding:10px 12px;text-align:left\">Observaciones</th>\n        </tr>\n      </thead>\n      <tbody>${filas}</tbody>\n    </table>\n\n    <p style=\"font-size:11px;color:#a0aec0;text-align:center;margin-top:24px\">\n      Generado automáticamente · ${new Date().toLocaleString('es-ES')}\n    </p>\n  </div>\n</div>`;\n\nreturn [{ json: { html, fechaLegible, total, resumenTexto } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        -32
+      ],
+      "id": "db82e3f3-7830-4a6c-bbea-74087b5ca61e",
+      "name": "HTML email + pdf"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "calculo de fechas": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "consolidar datos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "consolidar datos": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "calculo de fechas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Extraer Resumen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extraer Resumen": {
+      "main": [
+        [
+          {
+            "node": "HTML email + pdf",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML email + pdf": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "29ad21e2-1265-45c6-bf5a-b3eae6641305",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "8e452ce786b6b4c8a8d9ad21a42871ba59db6feb46e3cb0cf7321b98c303fb94"
+  },
+  "id": "mQ3tuJib2H2y-1HqOHuSs",
+  "tags": []
+}
